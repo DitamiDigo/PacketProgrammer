@@ -19,12 +19,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
-import java.util.Optional;
 
 @ExtensionInfo(
-        Title = "PacketsProgrammer",
+        Title = "PacketProgrammer",
         Description = "Program with packets",
-        Version = "1.0",
+        Version = "1.1",
         Author = "DitamiDigo"
 )
 
@@ -92,18 +91,26 @@ public class PacketProgrammer extends ExtensionForm {
         });
 
         sendToServer(new HPacket("InfoRetrieve", HMessage.Direction.TOSERVER));
-        intercept(HMessage.Direction.TOCLIENT, "UserObject", this::inUserObject);
-        intercept(HMessage.Direction.TOSERVER, "MoveAvatar", this::outMoveAvatar);
-        intercept(HMessage.Direction.TOSERVER, "UseFurniture", this::outUseFurniture);
-        intercept(HMessage.Direction.TOSERVER, "EnterOneWayDoor", this::outEnterOneWayDoor);
-        intercept(HMessage.Direction.TOCLIENT, "Users", this::inUsers);
-        intercept(HMessage.Direction.TOCLIENT, "UserUpdate", this::inUserUpdate);
+        sendToServer(new HPacket("AvatarExpression", HMessage.Direction.TOSERVER, 0));
+        intercept(HMessage.Direction.TOCLIENT, "UserObject", this::InUserObject);
+        intercept(HMessage.Direction.TOCLIENT, "Expression", this::InExpression);
+        intercept(HMessage.Direction.TOSERVER, "MoveAvatar", this::OutMoveAvatar);
+        intercept(HMessage.Direction.TOSERVER, "UseFurniture", this::OutUseFurniture);
+        intercept(HMessage.Direction.TOSERVER, "EnterOneWayDoor", this::OutEnterOneWayDoor);
+        intercept(HMessage.Direction.TOCLIENT, "Users", this::InUsers);
+        intercept(HMessage.Direction.TOCLIENT, "UserUpdate", this::InUserUpdate);
         intercept(HMessage.Direction.TOCLIENT, "SlideObjectBundle", this::InSlideObjectBundle);
         intercept(HMessage.Direction.TOCLIENT, "ObjectDataUpdate", this::InObjectDataUpdate);
         intercept(HMessage.Direction.TOCLIENT, "ObjectsDataUpdate", this::InObjectsDataUpdate);
         intercept(HMessage.Direction.TOCLIENT, "WiredMovements", this::InWiredMovements);
 
         Platform.runLater(this::setupTable);
+    }
+
+    private void InExpression(HMessage hMessage) {
+        if(yourIndex == -1){
+            yourIndex = hMessage.getPacket().readInteger();
+        }
     }
 
     public void toggleAlwaysOnTop() {
@@ -134,7 +141,7 @@ public class PacketProgrammer extends ExtensionForm {
         }
     }
 
-    private void outEnterOneWayDoor(HMessage hMessage) {
+    private void OutEnterOneWayDoor(HMessage hMessage) {
         if (capture.isSelected()) {
             HPacket packet = hMessage.getPacket();
             hMessage.setBlocked(true);
@@ -397,13 +404,13 @@ public class PacketProgrammer extends ExtensionForm {
         }
     }
 
-    private void inUserObject(HMessage hMessage) {
+    private void InUserObject(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
         packet.readInteger();
         yourName = packet.readString();
     }
 
-    private void inUserUpdate(HMessage hMessage) {
+    private void InUserUpdate(HMessage hMessage) {
         if (activate.isSelected()) {
             try {
                 HPacket packet = hMessage.getPacket();
@@ -432,7 +439,7 @@ public class PacketProgrammer extends ExtensionForm {
         }
     }
 
-    private void outMoveAvatar(HMessage hMessage) {
+    private void OutMoveAvatar(HMessage hMessage) {
         if (capture.isSelected()) {
             HPacket packet = hMessage.getPacket();
             hMessage.setBlocked(true);
@@ -508,7 +515,7 @@ public class PacketProgrammer extends ExtensionForm {
         }
     }
 
-    private void outUseFurniture(HMessage hMessage) {
+    private void OutUseFurniture(HMessage hMessage) {
         if (capture.isSelected()) {
             HPacket packet = hMessage.getPacket();
             hMessage.setBlocked(true);
@@ -560,7 +567,7 @@ public class PacketProgrammer extends ExtensionForm {
         }
     }
 
-    private void inUsers(HMessage hMessage) {
+    private void InUsers(HMessage hMessage) {
         HPacket packet = hMessage.getPacket();
         HEntity[] roomUsersList = HEntity.parse(packet);
         for (HEntity entity : roomUsersList) {
